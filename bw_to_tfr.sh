@@ -31,7 +31,6 @@ unmap=datasets/GRCh38_unmap.bed
 # bin/create_samplefile.py "$data" $summary_file_path $label_for_samplefiles $filetype $samplefile_dir
 
 # select best bed from basset preprocessing
-
 /home/shush/codebase/src/preprocess_features.py -y -m 200 -s $input_size \
                                                 -o $o_prefix -c $genome_size \
                                                 $basset_samplefile
@@ -64,7 +63,7 @@ rm $sorted_bedfile
 bin/basenji_data.py $genome \
                     $basenji_samplefile \
                     -g merged_avoid_regions.bed \
-                    -l $input_size -o $output_dir/$profile_subdir -t .1 -v .1 \
+                    -l $input_size -o $output_dir/$profile_subdir -t chr8 -v chr9 \
                     -w $pool_window --local -d $d
 # #
 scp merged_avoid_regions.bed "$output_dir/$profile_subdir/"
