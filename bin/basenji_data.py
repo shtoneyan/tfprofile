@@ -128,6 +128,15 @@ def main():
   parser.add_option('-v', dest='valid_pct_or_chr',
       default=0.05, type='str',
       help='Proportion of the data for validation [Default: %default]')
+  parser.add_option('--norm', dest='norm',
+        default='', type='str',
+        help='Normalize coverage values')
+  parser.add_option('--step', dest='step',
+      default=0, type='int',
+      help='Stride using bp size [Default: %pool_window]')
+  parser.add_option('--padding', dest='padding',
+        default='same', type='str',
+        help='Padding method for sliding window approach')
   (options, args) = parser.parse_args()
 
   if len(args) != 2:
@@ -381,6 +390,10 @@ def main():
         cmd += ' -b %s' % options.blacklist_bed
       if options.interp_nan:
         cmd += ' -i'
+      if options.norm:
+        cmd += ' --norm %s' % options.norm
+      if options.step:
+        cmd += ' --step %i' % options.step
       cmd += ' %s' % genome_cov_file
       cmd += ' %s' % seqs_bed_file
       cmd += ' %s' % seqs_cov_file
@@ -402,7 +415,6 @@ def main():
   else:
     slurm.multi_run(read_jobs, options.processes, verbose=True,
                     launch_sleep=1, update_sleep=5)
-
   ################################################################
   # write TF Records
   ################################################################
