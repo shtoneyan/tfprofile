@@ -22,6 +22,7 @@ import h5py
 import intervaltree
 import numpy as np
 import pandas as pd
+import more_itertools
 try:
   import pyBigWig
 except:
@@ -65,6 +66,18 @@ def main():
   parser.add_option('-w',dest='pool_width',
       default=1, type='int',
       help='Average pooling width [Default: %default]')
+  parser.add_option('--norm', dest='norm',
+        default='', type='str',
+        help='Normalize coverage values')
+  # parser.add_option('--step_fr', dest='step_fr',
+  #     default=1., type='float',
+  #     help='Stride using fraction of bin size [Default: %default]')
+  parser.add_option('--step_bp',dest='step_bp',
+      default=0, type='int',
+      help='Stride using bp step size [Default: %default]')
+  parser.add_option('--padding', dest='padding',
+        default='same', type='str',
+        help='Padding method for sliding window approach')
   (options, args) = parser.parse_args()
 
   if len(args) != 3:
@@ -134,9 +147,16 @@ def main():
     # crop
     if options.crop_bp > 0:
       seq_cov_nt = seq_cov_nt[options.crop_bp:-options.crop_bp]
+    if options.step_bp > 0:
+        if options.padding == 'same':
+            seq_cov_nt = np.pad(seq_cov_nt, (int(options.pool_width/2-1), int(options.pool_width/2)), 'edge')
+            #TODO:Add padding types
+        seq_cov = np.array(list(more_itertools.windowed(seq_cov_nt,
+                      n=options.pool_width, step=options.step_bp)))
 
     # sum pool
-    seq_cov = seq_cov_nt.reshape(target_length, options.pool_width)
+    else:
+      seq_cov = seq_cov_nt.reshape(target_length, options.pool_width)
     if options.sum_stat == 'sum':
       seq_cov = seq_cov.sum(axis=1, dtype='float32')
     elif options.sum_stat in ['mean', 'avg']:
@@ -152,6 +172,7 @@ def main():
       print('ERROR: Unrecognized summary statistic "%s".' % options.sum_stat,
             file=sys.stderr)
       exit(1)
+    print(seq_cov.shape)
 
     # clip
     if options.clip_soft is not None:
@@ -162,7 +183,9 @@ def main():
 
     # scale
     seq_cov = options.scale * seq_cov
-
+    if options.norm=='log':
+      seq_cov = np.log(seq_cov+1)
+      # print('LOG NORMALIZING THE DATA')
     # save
     targets_list.append(seq_cov.astype('float16'))
 
