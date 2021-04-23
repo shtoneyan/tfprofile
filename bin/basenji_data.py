@@ -135,7 +135,7 @@ def main():
       default=0, type='int',
       help='Stride using bp size [Default: %pool_window]')
   parser.add_option('--padding', dest='padding',
-        default='same', type='str',
+        default='valid', type='str',
         help='Padding method for sliding window approach')
   (options, args) = parser.parse_args()
 
@@ -394,6 +394,8 @@ def main():
         cmd += ' --norm %s' % options.norm
       if options.step:
         cmd += ' --step %i' % options.step
+      if options.padding:
+        cmd += ' --padding %s' % options.padding
       cmd += ' %s' % genome_cov_file
       cmd += ' %s' % seqs_bed_file
       cmd += ' %s' % seqs_cov_file
@@ -415,6 +417,7 @@ def main():
   else:
     slurm.multi_run(read_jobs, options.processes, verbose=True,
                     launch_sleep=1, update_sleep=5)
+
   ################################################################
   # write TF Records
   ################################################################

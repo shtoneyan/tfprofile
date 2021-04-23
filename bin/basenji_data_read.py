@@ -76,7 +76,7 @@ def main():
       default=0, type='int',
       help='Stride using bp step size [Default: %default]')
   parser.add_option('--padding', dest='padding',
-        default='same', type='str',
+        default='valid', type='str',
         help='Padding method for sliding window approach')
   (options, args) = parser.parse_args()
 
@@ -147,13 +147,15 @@ def main():
     # crop
     if options.crop_bp > 0:
       seq_cov_nt = seq_cov_nt[options.crop_bp:-options.crop_bp]
+
+    # sliding window
     if options.step_bp > 0:
         if options.padding == 'same':
-            seq_cov_nt = np.pad(seq_cov_nt, (int(options.pool_width/2-1), int(options.pool_width/2)), 'edge')
-            #TODO:Add padding types
+            seq_cov_nt = np.pad(seq_cov_nt, (int(options.pool_width/2-1),
+                                int(options.pool_width/2)), 'edge')
+        #
         seq_cov = np.array(list(more_itertools.windowed(seq_cov_nt,
                       n=options.pool_width, step=options.step_bp)))
-
     # sum pool
     else:
       seq_cov = seq_cov_nt.reshape(target_length, options.pool_width)
@@ -172,7 +174,6 @@ def main():
       print('ERROR: Unrecognized summary statistic "%s".' % options.sum_stat,
             file=sys.stderr)
       exit(1)
-    print(seq_cov.shape)
 
     # clip
     if options.clip_soft is not None:
